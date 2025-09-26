@@ -8,7 +8,7 @@ data class User (val login: String, val salt: String, val passwordHashHex: Strin
 typealias Permissions = Map<String, Set<Action>>//права
 data class Resource(val path: String, val maxVolume: Int)//ресурс для максимального объема
 
-//бд с двумя пользователями
+// бд с двумя пользователями
 object Db {
     val users: Map<String, User> = listOf(
         User ("alice", "nan", "a547590f99d5fd581b3ce00f83757bb2019ec16e54816418e1e932ddbd8afadc"),
@@ -37,7 +37,7 @@ object Db {
     )
 }
 
-//утилиты
+// утилиты
 fun sha256Hex(s: String): String =
     MessageDigest.getInstance("SHA-256")
         .digest(s.toByteArray(Charsets.UTF_8))
@@ -48,10 +48,7 @@ fun checkPassword(user: User, password: String): Boolean=
 
 private val NAME_RE = Regex("^[A-Za-z0-9_]{1,20}$")
 
-fun validateResourcePath(path: String): Boolean =
-    path.isNotBlank() && path.split('.').all { NAME_RE.matches(it) }
-
-//из A.B.C в A.B.C, A.B, A
+// из A.B.C в A.B.C, A.B, A
 fun ancestors(path: String): Sequence<String> = sequence {
     var cur = path
     while (true) {
@@ -62,7 +59,7 @@ fun ancestors(path: String): Sequence<String> = sequence {
     }
 }
 
-//разрешенные действия для login и path
+// разрешенные действия для login и path
 fun effectivePermissions(login: String, path: String): Set<Action> {
     val userPerms = Db.permissions[login] ?: return emptySet()
     val acc = mutableSetOf<Action>()
@@ -81,7 +78,7 @@ class Args(
     val help: Boolean
 )
 
-//парсинг аргументов
+// парсинг аргументов
 fun parseArgs(argv: Array<String>): Args {
     var login: String? = null
     var password: String? = null
@@ -107,7 +104,7 @@ fun parseArgs(argv: Array<String>): Args {
     return Args(login, password, action, resource, volume, help)
 }
 
-//справка
+// справка
 fun printHelp() {
     println(
         """
@@ -144,7 +141,7 @@ fun main(argv: Array<String>) {
     //нормализация
     val login = a.login ?: run { printHelp(); exitProcess(1) }
     val password = a.password ?: run { printHelp(); exitProcess(1) }
-    val action = when (a.actionStr?.lowercase()) {
+    val action: Action = when (a.actionStr?.lowercase()) {
         "read" -> Action.read
         "write" -> Action.write
         "exec" -> Action.exec
@@ -154,21 +151,18 @@ fun main(argv: Array<String>) {
     val resource = a.resource ?: run { printHelp(); exitProcess(1) }
     val volume = a.volumeStr?.toIntOrNull() ?: run { exitProcess(7) }
 
-    //валидация ресурса
-    if (!validateResourcePath(resource)) exitProcess(7)
-
-    //логин пароль
+    // логин пароль
     val user = Db.users[login] ?: exitProcess(3)
     if (!checkPassword(user, password)) exitProcess(2)
 
-    //существование ресурса
+    // существование ресурса
     val res = Db.resources[resource] ?: exitProcess(6)
 
-    //доступ
+    // доступ
     val perms = effectivePermissions(login, resource)
     if (action !in perms) exitProcess(5)
 
-    //лимит
+    // лимит
     if (volume < 0) exitProcess(7)
     if (volume > res.maxVolume) exitProcess(8)
 
