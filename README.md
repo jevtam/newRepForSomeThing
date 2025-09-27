@@ -29,7 +29,7 @@
 sh build.sh
 ### Запуск:
 sh run.sh --login alice --password qwerty --action read --resource A.B.C --volume 10
-Тестирование:
+## Тестирование:
 sh test.sh
 
 Пример вывода:
