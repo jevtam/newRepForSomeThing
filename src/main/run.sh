@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-java -jar build/app.jar "$@"
+
+OUT_DIR=build
+JAR=$OUT_DIR/app.jar
+CLI_JAR=$OUT_DIR/kotlinx-cli-0.3.5.jar
+
+java -cp "$JAR:$CLI_JAR" app.MainKt "$@"
