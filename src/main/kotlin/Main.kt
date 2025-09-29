@@ -2,6 +2,7 @@ package app
 
 import  kotlin.system.exitProcess
 import java.security.MessageDigest
+import kotlinx.cli.*
 
 enum class Action {read, write, exec}
 data class User (val login: String, val salt: String, val passwordHashHex: String)//данные пользователя, соль и хэш пароля
@@ -31,7 +32,7 @@ object Db {
             "A" to setOf(Action.read),
             "A.B" to setOf(Action.read, Action.write)
         ),
-        "paul" to mapOf(
+        "bob" to mapOf(
             "A.A8B" to setOf(Action.read)
         )
     )
@@ -80,53 +81,41 @@ class Args(
 
 // парсинг аргументов
 fun parseArgs(argv: Array<String>): Args {
-    var login: String? = null
-    var password: String? = null
-    var action: String? = null
-    var resource: String? = null
-    var volume: String? = null
-    var help = false
+    val parser = ArgParser("app")
 
-    var i = 0
-    while (i < argv.size) {
-        when (argv[i]) {
-            "-h", "--help" -> { help = true; i++ }
-            "--login"      -> { login = argv.getOrNull(++i); i++ }
-            "--password"   -> { password = argv.getOrNull(++i); i++ }
-            "--action"     -> { action = argv.getOrNull(++i); i++ }
-            "--resource"   -> { resource = argv.getOrNull(++i); i++ }
-            "--volume"     -> { volume = argv.getOrNull(++i); i++ }
-            else           -> {
-                help = true; break
-            }
-        }
+    val login     by parser.option(ArgType.String,  fullName = "login",    description = "Логин пользователя")
+    val password  by parser.option(ArgType.String,  fullName = "password", description = "Пароль (SHA-256(salt+password))")
+    val actionStr by parser.option(ArgType.String,  fullName = "action",   description = "Действие: read|write|exec")
+    val resource  by parser.option(ArgType.String,  fullName = "resource", description = "Путь к ресурсу A.B.C")
+    val volumeStr by parser.option(ArgType.String,  fullName = "volume",   description = "Запрашиваемый объем (целое >= 0)")
+    val help      by parser.option(ArgType.Boolean, shortName = "h", fullName = "help",
+        description = "Показать справку").default(false)
+
+    try {
+        parser.parse(argv)
+    } catch (e: Exception) {
+        // некорректный формат запуска -> показать help и вернуть как help
+        println(e.message ?: "")
+        printHelp()
+        return Args(null, null, null, null, null, true)
     }
-    return Args(login, password, action, resource, volume, help)
+
+    return Args(login, password, actionStr, resource, volumeStr, help)
 }
 
-// справка
 fun printHelp() {
     println(
         """
 Usage:
-    java -jar app.jar --login <name> --password <pwd> --action <read|write|exec> --resource <A.B.C> --volume <int>
+  java -jar app.jar --login <name> --password <pwd> --action <read|write|exec> --resource <A.B.C> --volume <int>
 Options:
-    --login: Логин пользователя
-    --password: Пароль (будет проверен как SHA-256(salt+password))
-    --action: Действие: read | write | exec
-    --resource: Путь к ресурсу, сегменты [A-Za-z0-9_]{1,20}, разделитель '.'
-    --volume: Запрашиваемый целочисленный объект объёма (>= 0)
-    -h, --help: Показать справку
-Exit codes:
-    0: Успешное выполнение
-    1: Запрошена справка
-    2: Неверный пароль
-    3: Неверный логин
-    4: Неизвестное действие над ресурсом
-    5: Нет доступа
-    6: Несуществующий ресурс
-    7: Некорректный формат ресурса или объема
-    8: Превышение максимального объема
+  --login      Логин пользователя
+  --password   Пароль (SHA-256(salt+password))
+  --action     read | write | exec
+  --resource   Путь, сегменты [A-Za-z0-9_]{1,20} через '.'
+  --volume     Целое число (>= 0)
+  -h, --help   Показать справку
+Exit codes: 0..8 (см. README)
         """.trimIndent()
     )
 }
