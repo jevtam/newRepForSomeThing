@@ -99,7 +99,7 @@ Main.kt в пакете app
 ## 1 Модели в домен
 Вынести Action, User, Resource в domain/model.
 
-## 2 Bнтерфейсы
+## 2 Интерфейсы
 Создать в domain/ports:
 
 interface UserRepository { fun find(login: String): User? }
