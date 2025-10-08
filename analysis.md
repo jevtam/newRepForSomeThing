@@ -158,3 +158,45 @@ Unit-тесты на CheckAccess с моками UserRepository, ResourceReposit
 Main.kt содержит только связки.
 
 В infrastructure минимум одна реализация портов (InMemory).
+
+## Схема проекта:
+```
+src/
+└── main/
+    └── kotlin/
+        ├── app/
+        │   └── Main.kt
+        │
+        ├── domain/
+        │   ├── model/
+        │   │   ├── Action.kt
+        │   │   ├── User.kt
+        │   │   └── Resource.kt
+        │   │
+        │   ├── ports/
+        │   │   ├── UserRepository.kt
+        │   │   ├── ResourceRepository.kt
+        │   │   ├── PermissionService.kt
+        │   │   └── Hasher.kt
+        │   │
+        │   └── services/
+        │       ├── AuthService.kt
+        │       ├── AccessPolicy.kt
+        │       └── QuotaService.kt
+        │
+        ├── usecase/
+        │   └── CheckAccess.kt
+        │
+        └── infrastructure/
+            ├── cli/
+            │   ├── CliParser.kt
+            │   └── CliPresenter.kt
+            │
+            ├── repo/
+            │   ├── InMemoryUserRepository.kt
+            │   ├── InMemoryResourceRepository.kt
+            │   └── InMemoryPermissionService.kt
+            │
+            └── crypto/
+                └── Sha256Hasher.kt
+```
