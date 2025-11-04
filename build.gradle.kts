@@ -12,6 +12,8 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
+    testImplementation("io.mockk:mockk:1.13.12")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
 }
 
 tasks.test {
