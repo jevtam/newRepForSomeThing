@@ -14,6 +14,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3.6")
     testImplementation("io.mockk:mockk:1.13.12")
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
+    implementation("org.xerial:sqlite-jdbc:3.46.0.0")
 }
 
 tasks.test {

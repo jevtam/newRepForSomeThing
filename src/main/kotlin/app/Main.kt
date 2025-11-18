@@ -5,27 +5,29 @@ import domain.services.AuthService
 import domain.services.QuotaService
 import infrastructure.cli.CliParser
 import infrastructure.cli.CliPresenter
-import infrastructure.repo.*
 import infrastructure.crypto.Sha256Hasher
 import usecase.CheckAccess
+import infrastructure.db.*
 
-fun main(argv: Array<String>) {
-    val parse = CliParser().parse(argv)
-    if (parse is infrastructure.cli.CliParse.Help) CliPresenter.showHelpAndExit()
-    if (parse is infrastructure.cli.CliParse.UnknownAction) CliPresenter.present(usecase.CheckAccessResult.BadFormat)
-    if (parse !is infrastructure.cli.CliParse.Ok) CliPresenter.present(usecase.CheckAccessResult.BadFormat)
+fun main(args: Array<String>) {
+    val parser = CliParser()
+    val input = parser.parse(args)
 
-    val users = InMemoryUserRepository()
-    val resources = InMemoryResourceRepository()
-    val perms = InMemoryPermissionService()
-    val hasher = Sha256Hasher()
+    db.getConnection().use { conn ->
+        Migrations.migrate(conn)
 
-    val uc = CheckAccess(
-        auth = AuthService(users, hasher),
-        policy = AccessPolicy(perms),
-        quota = QuotaService(resources)
-    )
+        val userRepo = SqliteUserRepository(conn)
+        val resRepo  = SqliteResourceRepository(conn)
+        val permSvc  = SqlitePermissionService(conn)
+        val hasher   = Sha256Hasher()
 
-    val result = uc.execute(parse.input)
-    CliPresenter.present(result)
+        val auth  = AuthService(userRepo, hasher)
+        val quota = QuotaService(resRepo)
+        val policy = AccessPolicy(permSvc)
+
+        val usecase = CheckAccess(auth, policy, quota)
+
+        val result = usecase.execute(input)
+        CliPresenter.present(result)
+    }
 }
