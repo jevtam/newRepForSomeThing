@@ -4,7 +4,7 @@ set -euo pipefail
 KOTLIN_VERSION=1.9.24
 CLI_VER=0.3.5
 
-SRC_DIR="src"
+SRC_DIR="src/main/kotlin"
 OUT_DIR="build"
 JAR="$OUT_DIR/app.jar"
 CLI_JAR="$OUT_DIR/kotlinx-cli-jvm-$CLI_VER.jar"
