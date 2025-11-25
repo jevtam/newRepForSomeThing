@@ -12,8 +12,7 @@ CLI_JAR="$OUT_DIR/kotlinx-cli-$CLI_VER.jar"
 mkdir -p "$OUT_DIR"
 
 if [ ! -f "$CLI_JAR" ]; then
-  curl -L -o "$CLI_JAR" \
-  "https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-cli/$CLI_VER/kotlinx-cli-$CLI_VER.jar"
+  curl -L -o "$CLI_JAR" "https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-cli/$CLI_VER/kotlinx-cli-$CLI_VER.jar"
 fi
 
 kotlinc "$SRC_DIR" -include-runtime -cp "$CLI_JAR" -d "$JAR"

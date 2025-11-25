@@ -1,19 +1,12 @@
-name: CI
+name: CD
 
 on:
   push:
     branches:
       - main
-      - lab3
-      - lab3tests
-      - lab4db
-      - lab6CICD
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  build-and-test:
+  release:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,24 +22,26 @@ jobs:
       - name: Make scripts executable
         run: chmod +x ./build.sh ./run.sh ./test.sh
 
-      - name: Build
+      - name: Build JAR
         run: ./build.sh
 
       - name: Run tests
         run: ./test.sh
 
-      - name: SonarCloud Scan
-        if: always()
-        uses: SonarSource/sonarcloud-github-action@master
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: "Auto Release #${{ github.run_number }}"
+          draft: false
+          prerelease: false
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          projectBaseDir: .
 
-      - name: Upload app.jar artifact
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Upload JAR to Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: app-jar
-          path: build/app.jar
+          files: build/app.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
