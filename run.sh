@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OUT_DIR="build"
-JAR="$OUT_DIR/app.jar"
-CLI_JAR="$OUT_DIR/kotlinx-cli-jvm-0.3.5.jar"
+mvn -B -q -DskipTests=true package
 
-java -cp "$JAR:$CLI_JAR" app.MainKt "$@"
+APP_JAR=$(ls target/*-SNAPSHOT.jar | head -n 1)
+
+if [ -z "$APP_JAR" ]; then
+  echo "JAR not found in target/"
+  exit 1
+fi
+
+java -jar "$APP_JAR" "$@"
