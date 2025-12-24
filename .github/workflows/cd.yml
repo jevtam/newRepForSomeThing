@@ -19,6 +19,13 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Prepare wrapper
+        run: |
+          sed -i 's/\r$//' mvnw
+          chmod +x mvnw
+          chmod +x scripts/*.sh
+      
+
       - name: Cache Kotlin compiler
         uses: actions/cache@v4
         with:
