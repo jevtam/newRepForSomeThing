@@ -1,52 +1,55 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
-      - lab3
-      - lab3tests
-      - lab4db
-      - lab6CICD
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  build-test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: "17"
+
+      - name: Cache Kotlin compiler
+        uses: actions/cache@v4
+        with:
+          path: build/kotlin-1.9.24
+          key: kotlin-compiler-1.9.24
 
       - name: Make scripts executable
-        run: chmod +x ./build.sh ./run.sh ./test.sh
+        run: chmod +x scripts/*.sh
 
       - name: Build
-        run: ./build.sh
+        run: scripts/build.sh
 
-      - name: Run tests
-        run: ./test.sh
+      - name: Unit tests (JUnit)
+        run: scripts/unit-test.sh
+
+      - name: App tests
+        run: scripts/test.sh
 
       - name: SonarCloud Scan
-        if: always()
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarcloud-github-action@v3
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          projectBaseDir: .
 
-      - name: Upload app.jar artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-jar
-          path: build/app.jar
+
+      - name: Telegram notify (success)
+        if: success()
+        run: |
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TG_CHAT_ID }}" \
+            -d text="✅ CI OK: ${{ github.repository }} PR #${{ github.event.pull_request.number }}"
+
+      - name: Telegram notify (fail)
+        if: failure()
+        run: |
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TG_CHAT_ID }}" \
+            -d text="❌ CI FAIL: ${{ github.repository }} PR #${{ github.event.pull_request.number }}"

@@ -7,7 +7,7 @@ total=9
 run() {
   expected=$1; shift
   set +e
-  ./run.sh "$@" >/dev/null 2>&1
+  ./scripts/run.sh "$@" >/dev/null 2>&1
   rc=$?
   set -e
   if [ $rc -eq $expected ]; then
@@ -18,7 +18,7 @@ run() {
   fi
 }
 
-set +e; ./run.sh --help >/dev/null 2>&1; rc=$?; set -e
+set +e; ./scripts/run.sh --help >/dev/null 2>&1; rc=$?; set -e
 if [ $rc -eq 1 ]; then
   echo "OK  (1) --help";
   pass=$((pass+1));
