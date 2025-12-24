@@ -8,26 +8,40 @@ import infrastructure.cli.CliPresenter
 import infrastructure.crypto.Sha256Hasher
 import usecase.CheckAccess
 import infrastructure.db.*
+import java.sql.SQLException
+import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     val parser = CliParser()
     val input = parser.parse(args)
 
-    db.getConnection().use { conn ->
-        Migrations.migrate(conn)
+    try {
+        db.getConnection().use { conn ->
+            try {
+                Migrations.migrate(conn)
+            } catch (e: SQLException) {
+                exitProcess(10)
+            }
 
-        val userRepo = SqliteUserRepository(conn)
-        val resRepo  = SqliteResourceRepository(conn)
-        val permSvc  = SqlitePermissionService(conn)
-        val hasher   = Sha256Hasher()
+            val userRepo = SqliteUserRepository(conn)
+            val resRepo  = SqliteResourceRepository(conn)
+            val permSvc  = SqlitePermissionService(conn)
+            val hasher   = Sha256Hasher()
 
-        val auth  = AuthService(userRepo, hasher)
-        val quota = QuotaService(resRepo)
-        val policy = AccessPolicy(permSvc)
+            val auth   = AuthService(userRepo, hasher)
+            val quota  = QuotaService(resRepo)
+            val policy = AccessPolicy(permSvc)
 
-        val usecase = CheckAccess(auth, policy, quota)
+            val usecase = CheckAccess(auth, policy, quota)
 
-        val result = usecase.execute(input)
-        CliPresenter.present(result)
+            try {
+                val result = usecase.execute(input)
+                CliPresenter.present(result)
+            } catch (e: SQLException) {
+                exitProcess(10)
+            }
+        }
+    } catch (e: SQLException) {
+        exitProcess(9)
     }
 }
