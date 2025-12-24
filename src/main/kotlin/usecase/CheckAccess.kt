@@ -4,7 +4,6 @@ import domain.model.Action
 import domain.services.AccessPolicy
 import domain.services.AuthService
 import domain.services.QuotaService
-import infrastructure.cli.CliParse
 
 data class CheckAccessInput(
     val login: String,
@@ -28,7 +27,7 @@ class CheckAccess(
     private val policy: AccessPolicy,
     private val quota: QuotaService
 ) {
-    fun execute(input: CliParse): CheckAccessResult {
+    fun execute(input: CheckAccessInput): CheckAccessResult {
         if (!auth.isPasswordValid(input.login, input.password))
             return CheckAccessResult.BadLoginOrPassword
 
