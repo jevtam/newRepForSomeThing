@@ -4,10 +4,13 @@ import kotlin.system.exitProcess
 import usecase.CheckAccessResult
 
 object CliPresenter {
+
     fun showHelpAndExit(): Nothing {
-        println("""
+        println(
+            """
 Usage:
-  java -jar app.jar --login <name> --password <pwd> --action <read|write|exec> --resource <A.B.C> --volume <int>
+  app --login <name> --password <pwd> --action <read|write|exec> --resource <A.B.C> --volume <int>
+  app -h|--help
 
 Exit codes:
   0 OK
@@ -17,9 +20,14 @@ Exit codes:
   6 Resource not found
   7 Bad format
   8 Volume exceeded
-        """.trimIndent())
+  9 DB connection error
+  10 SQL error
+            """.trimIndent()
+        )
         exitProcess(1)
     }
+
+    fun exitBadFormat(): Nothing = exitProcess(7)
 
     fun present(result: CheckAccessResult): Nothing {
         val code = when (result) {

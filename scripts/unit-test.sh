@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mvn -B -q test
+./mvnw -q test
