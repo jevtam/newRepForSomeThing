@@ -1,7 +1,9 @@
 package infrastructure.cli
 
 import domain.model.Action
-import kotlinx.cli.*
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
+import kotlinx.cli.default
 import usecase.CheckAccessInput
 
 sealed interface CliParse {
@@ -12,39 +14,47 @@ sealed interface CliParse {
 }
 
 class CliParser {
-    fun parse(argv: Array<String>): CliParse {
-        val parser = ArgParser("app")
 
-        val login     by parser.option(ArgType.String, fullName = "login")
-        val password  by parser.option(ArgType.String, fullName = "password")
+    fun parse(argv: Array<String>): CliParse {
+        val parser = ArgParser(programName = "app")
+
+        val login by parser.option(ArgType.String, fullName = "login")
+        val password by parser.option(ArgType.String, fullName = "password")
         val actionStr by parser.option(ArgType.String, fullName = "action")
-        val resource  by parser.option(ArgType.String, fullName = "resource")
+        val resource by parser.option(ArgType.String, fullName = "resource")
         val volumeStr by parser.option(ArgType.String, fullName = "volume")
-        val help      by parser.option(ArgType.Boolean, shortName = "h", fullName = "help")
+        val help by parser.option(ArgType.Boolean, shortName = "h", fullName = "help")
             .default(false)
 
-        return try {
+        try {
             parser.parse(argv)
-            if (help) return CliParse.Help
+        } catch (_: Exception) {
+            return CliParse.BadFormat
+        }
 
-            val action = when (actionStr?.lowercase()) {
-                "read" -> Action.read
-                "write" -> Action.write
-                "exec" -> Action.exec
-                else -> return CliParse.UnknownAction
-            }
-            val v = volumeStr?.toIntOrNull() ?: return CliParse.BadFormat
+        if (help) return CliParse.Help
 
-            val input = CheckAccessInput(
-                login = login ?: return CliParse.BadFormat,
-                password = password ?: return CliParse.BadFormat,
-                action = action,
-                resource = resource ?: return CliParse.BadFormat,
+        val l = login ?: return CliParse.BadFormat
+        val p = password ?: return CliParse.BadFormat
+        val r = resource ?: return CliParse.BadFormat
+        val v = volumeStr?.toIntOrNull() ?: return CliParse.BadFormat
+
+        val act = when (actionStr?.lowercase()) {
+            "read" -> Action.read
+            "write" -> Action.write
+            "exec" -> Action.exec
+            null -> return CliParse.BadFormat
+            else -> return CliParse.UnknownAction
+        }
+
+        return CliParse.Ok(
+            CheckAccessInput(
+                login = l,
+                password = p,
+                action = act,
+                resource = r,
                 volume = v
             )
-            CliParse.Ok(input)
-        } catch (_: Exception) {
-            CliParse.Help
-        }
+        )
     }
 }
