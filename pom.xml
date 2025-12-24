@@ -4,7 +4,6 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Spring Boot -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -22,16 +21,23 @@
     </properties>
 
     <dependencies>
-        <!-- Spring Boot + web -->
+        <!-- Spring Boot DI only -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- Kotlin -->
+        <!-- Kotlin reflect -->
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
+        </dependency>
+
+        <!-- Kotlin CLI -->
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-cli</artifactId>
+            <version>0.3.6</version>
         </dependency>
 
         <!-- SQLite -->
@@ -41,7 +47,7 @@
             <version>3.46.0.0</version>
         </dependency>
 
-        <!-- Тесты -->
+        <!-- Tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -58,7 +64,6 @@
 
     <build>
         <plugins>
-            <!-- Kotlin -->
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
@@ -84,7 +89,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Spring Boot -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

@@ -16,12 +16,6 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Cache Kotlin compiler
-        uses: actions/cache@v4
-        with:
-          path: build/kotlin-1.9.24
-          key: kotlin-compiler-1.9.24
-
       - name: Make scripts executable
         run: chmod +x scripts/*.sh
 
@@ -33,6 +27,14 @@ jobs:
 
       - name: App tests
         run: scripts/test.sh
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: m2-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            m2-${{ runner.os }}-
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v3

@@ -19,12 +19,7 @@ run() {
 }
 
 set +e; ./scripts/run.sh --help >/dev/null 2>&1; rc=$?; set -e
-if [ $rc -eq 1 ]; then
-  echo "OK  (1) --help";
-  pass=$((pass+1));
-else
-  echo "FAIL(exp:1 got:$rc) --help";
-fi
+if [ $rc -eq 1 ]; then echo "OK  (1) --help"; pass=$((pass+1)); else echo "FAIL(exp:1 got:$rc) --help"; fi
 
 run 0 --login alice --password qwerty --action read --resource A.B.C --volume 10
 run 2 --login alice --password wrong --action read --resource A.B.C --volume 10

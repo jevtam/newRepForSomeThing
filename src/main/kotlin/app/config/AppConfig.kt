@@ -1,43 +1,28 @@
 package app.config
 
-import domain.ports.PermissionService
-import domain.ports.ResourceRepository
-import domain.ports.UserRepository
-import domain.services.AccessPolicy
-import domain.services.AuthService
-import domain.services.QuotaService
 import infrastructure.crypto.Sha256Hasher
-import infrastructure.repo.InMemoryPermissionService
-import infrastructure.repo.InMemoryResourceRepository
-import infrastructure.repo.InMemoryUserRepository
+import infrastructure.db.Migrations
+import infrastructure.db.SqlitePermissionService
+import infrastructure.db.SqliteResourceRepository
+import infrastructure.db.SqliteUserRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import java.sql.Connection
+import java.sql.DriverManager
 
 @Configuration
 class AppConfig {
 
     @Bean
-    fun userRepository(): UserRepository = InMemoryUserRepository()
+    fun connection(): Connection {
+        val conn = DriverManager.getConnection("jdbc:sqlite:data.db")
+        Migrations.migrate(conn)
+        return conn
+    }
 
-    @Bean
-    fun resourceRepository(): ResourceRepository = InMemoryResourceRepository()
+    @Bean fun userRepo(conn: Connection) = SqliteUserRepository(conn)
+    @Bean fun resourceRepo(conn: Connection) = SqliteResourceRepository(conn)
+    @Bean fun permService(conn: Connection) = SqlitePermissionService(conn)
 
-    @Bean
-    fun permissionService(): PermissionService =
-        InMemoryPermissionService()
-
-    @Bean
-    fun hasher() = Sha256Hasher()
-
-    @Bean
-    fun authService(userRepository: UserRepository, hasher: Sha256Hasher) =
-        AuthService(userRepository, hasher)
-
-    @Bean
-    fun quotaService(resourceRepository: ResourceRepository) =
-        QuotaService(resourceRepository)
-
-    @Bean
-    fun accessPolicy(permissionService: PermissionService) =
-        AccessPolicy(permissionService)
+    @Bean fun hasher() = Sha256Hasher()
 }
