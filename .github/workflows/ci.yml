@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Prepare wrapper
+        run: |
+          sed -i 's/\r$//' mvnw
+          chmod +x mvnw
+          chmod +x scripts/*.sh
+
+      - name: Build
+        run: scripts/build.sh
+
+      - name: Unit tests (JUnit)
+        run: scripts/unit-test.sh
+
+      - name: App tests
+        run: scripts/test.sh
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: m2-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            m2-${{ runner.os }}-
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v3
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+
+      - name: Telegram notify (success)
+        if: success()
+        run: |
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TG_CHAT_ID }}" \
+            -d text="✅ CI OK: ${{ github.repository }} PR #${{ github.event.pull_request.number }}"
+
+      - name: Telegram notify (fail)
+        if: failure()
+        run: |
+          curl -sS -X POST "https://api.telegram.org/bot${{ secrets.TG_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TG_CHAT_ID }}" \
+            -d text="❌ CI FAIL: ${{ github.repository }} PR #${{ github.event.pull_request.number }}"
